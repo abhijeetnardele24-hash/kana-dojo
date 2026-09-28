@@ -41,8 +41,17 @@ const GauntletVocab: React.FC<GauntletVocabProps> = ({ onCancel }) => {
       ) : (
         <FuriganaText text={question.word} reading={question.reading} />
       ),
-    checkAnswer: (question, answer, isReverse) =>
-      isVocabularyMeaningAnswerCorrect(question, answer, isReverse),
+    checkAnswer: (question, answer, isReverse) => {
+      if (isReverse) {
+        // Accept any vocabulary item that shares a meaning with the current question
+        return selectedVocabObjs.some(
+          item =>
+            item.meanings.some(m => question.meanings.includes(m)) &&
+            isVocabularyMeaningAnswerCorrect(item, answer, isReverse),
+        );
+      }
+      return isVocabularyMeaningAnswerCorrect(question, answer, isReverse);
+    },
     getCorrectAnswer: (question, isReverse) =>
       isReverse ? question.word : question.meanings[0],
     // Pick mode support with reverse mode
@@ -56,6 +65,9 @@ const GauntletVocab: React.FC<GauntletVocabProps> = ({ onCancel }) => {
         )
           .filter(item => {
             if (seen.has(item.word)) return false;
+            // Prevent options that share a meaning with the correct answer
+            if (item.meanings.some(m => question.meanings.includes(m)))
+              return false;
             seen.add(item.word);
             return true;
           })
@@ -72,6 +84,8 @@ const GauntletVocab: React.FC<GauntletVocabProps> = ({ onCancel }) => {
         .filter(item => {
           const meaning = item.meanings[0];
           if (seen.has(meaning)) return false;
+          // Prevent options that have the same primary meaning as the correct answer
+          if (question.meanings.includes(meaning)) return false;
           seen.add(meaning);
           return true;
         })

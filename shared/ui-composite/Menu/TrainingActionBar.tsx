@@ -15,6 +15,7 @@ import ModeSetupMenu from '@/shared/ui-composite/Menu/ModeSetupMenu';
 import { cn } from '@/shared/utils/utils';
 import { useScrollVisibility } from '@/shared/hooks/generic/useScrollVisibility';
 import { useAutoLearningStore } from '@/features/Progress';
+import { useRouter } from '@/core/i18n/routing';
 
 const TRAINING_ACTION_CLASSIC_FLOAT_CLASSES = '';
 // 'motion-safe:animate-float [--float-distance:-3px] delay-200ms';
@@ -34,6 +35,7 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
   );
 
   const { playClick } = useClick();
+  const router = useRouter();
 
   // Modal state
   const [showGameModesModal, setShowGameModesModal] = useState(false);
@@ -69,12 +71,6 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
 
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-  const startAutoLearning = () => {
-    document
-      .querySelector<HTMLButtonElement>('[data-auto-learning-dojo]')
-      ?.click();
-  };
-
   useEffect(() => {
     if (!hotkeysOn) return;
 
@@ -91,7 +87,7 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
         if (showExperimentalModes) {
           setShowGameModesModal(true);
         } else {
-          startAutoLearning();
+          router.push(`/${currentDojo}/train`);
         }
       }
     };
@@ -100,7 +96,7 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [hotkeysOn, isFilled, showExperimentalModes]);
+  }, [hotkeysOn, isFilled, showExperimentalModes, currentDojo, router]);
 
   const showBlitz =
     currentDojo === 'kana' ||
@@ -355,7 +351,7 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
                   return;
                 }
 
-                startAutoLearning();
+                router.push(`/${currentDojo}/train`);
               },
               ref: buttonRef,
             },
@@ -407,7 +403,7 @@ const TrainingActionBar: React.FC<ITopBarProps> = ({
                 >
                   <Icon size={36} className={cn(iconClassName)} />
                   {id === 'custom' && (
-                    <span className='whitespace-nowrap text-lg font-medium sm:text-xl'>
+                    <span className='text-lg font-medium whitespace-nowrap sm:text-xl'>
                       {label}
                     </span>
                   )}

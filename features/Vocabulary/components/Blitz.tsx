@@ -51,8 +51,17 @@ export default function BlitzVocab() {
       ),
     inputPlaceholder: 'Type the meaning...',
     modeDescription: 'Mode: Type (See Japanese word → Type meaning)',
-    checkAnswer: (question, answer, isReverse) =>
-      isVocabularyMeaningAnswerCorrect(question, answer, isReverse),
+    checkAnswer: (question, answer, isReverse) => {
+      if (isReverse) {
+        // Accept any vocabulary item that shares a meaning with the current question
+        return selectedVocabObjs.some(
+          item =>
+            item.meanings.some(m => question.meanings.includes(m)) &&
+            isVocabularyMeaningAnswerCorrect(item, answer, isReverse),
+        );
+      }
+      return isVocabularyMeaningAnswerCorrect(question, answer, isReverse);
+    },
     getCorrectAnswer: (question, isReverse) =>
       isReverse ? question.word : question.meanings[0],
     // Pick mode support with reverse mode
@@ -63,15 +72,30 @@ export default function BlitzVocab() {
         const incorrectOptions = shuffle(
           items.filter(item => item.word !== question.word),
         )
+          .filter(item => {
+            // Prevent options that share a meaning with the correct answer
+            if (item.meanings.some(m => question.meanings.includes(m)))
+              return false;
+            return true;
+          })
           .slice(0, count - 1)
           .map(item => item.word);
         return [correctAnswer, ...incorrectOptions];
       }
       // Normal: options are meanings
       const correctAnswer = question.meanings[0];
+      const seen = new Set([correctAnswer]);
       const incorrectOptions = shuffle(
         items.filter(item => item.word !== question.word),
       )
+        .filter(item => {
+          const meaning = item.meanings[0];
+          if (seen.has(meaning)) return false;
+          // Prevent options that have the same primary meaning as the correct answer
+          if (question.meanings.includes(meaning)) return false;
+          seen.add(meaning);
+          return true;
+        })
         .slice(0, count - 1)
         .map(item => item.meanings[0]);
       return [correctAnswer, ...incorrectOptions];
